@@ -1,0 +1,22 @@
+Gedit macropy
+==============
+
+This is a plugin for [Gedit][2] 3, the official text editor of the GNOME 
+desktop environment. This plugin is for Gedit versions 3 and above.
+ **This plugin is NOT compatible with Gedit 2.x**.
+
+Macropy adds some menu options and buttons to the menu-bar to record and 
+playback macros with Gedit.
+
+Installation
+------------
+
+1. Download the source code from this repository.
+2. Copy the files to the Gedit plugins directory 
+'~/.local/share/gedit/plugins/'.
+3. Restart Gedit and enable the plugin.
+    
+[1]: http://www.gedit.org
+
+
+
