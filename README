@@ -12,7 +12,7 @@ at a time. To execute a macro the shortcut ctrl+m is available.
 Installation
 ------------
 
-1. Download the source code form this repository.
+1. Download the source code from this repository.
 2. Copy the files macropy.py and macropy.plugin to the Gedit plugins 
 directory '~/.local/share/gedit/plugins/' (you might need to create the 
 directory.
