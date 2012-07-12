@@ -71,7 +71,7 @@ class macropy(GObject.Object, Gedit.WindowActivatable):
                 None, 'Stop macro recording', 
                 self.on_stop_macro_recording),
             ('PlaybackMacro', Gtk.STOCK_MEDIA_PLAY, 'Playback Macro', 
-                '<Ctrl>m', 'Playback recorded macro', 
+                '<Ctrl><Alt>m', 'Playback recorded macro', 
                 self.on_playback_macro)
         ])
         manager.insert_action_group(self._actions)
