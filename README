@@ -7,7 +7,7 @@ above. **This plugin is NOT compatible with Gedit 2.x**.
 
 This plugin allows to record and execute macros with Gedit 3. It adds menu
 options and buttons to the menu-bar for rapid access. It only allows one macro
-at a time. To execute a macro the shortcut ctrl+m is available.
+at a time. To execute a macro the shortcut ctrl+alt+m is available.
 
 Installation
 ------------
@@ -15,6 +15,6 @@ Installation
 1. Download the source code from this repository.
 2. Copy the files macropy.py and macropy.plugin to the Gedit plugins 
 directory '~/.local/share/gedit/plugins/' (you might need to create the 
-directory.
+directory).
 3. Restart Gedit and enable the plugin by searching it in the plugin tab in the
 preferences window.
