@@ -92,14 +92,14 @@ class macropy(GObject.Object, Gedit.WindowActivatable):
         handler_id = self.window.connect('key-press-event', 
                                           self.on_key_press_event)
         handlers.append(handler_id)
-        self.window.set_data('Macro1PluginHandlers', handlers) 
+        self.window.handlers = handlers
         self.macro = []
         self._actions.get_action('StartMacroRecording').set_sensitive(False)
         self._actions.get_action('StopMacroRecording').set_sensitive(True) 
         self._actions.get_action('PlaybackMacro').set_sensitive(False)
 
     def on_stop_macro_recording(self, action, data=None):
-        handlers = self.window.get_data('Macro1PluginHandlers')
+        handlers = self.window.handlers
         for handler_id in handlers:
             self.window.disconnect(handler_id)
         self._actions.get_action('StartMacroRecording').set_sensitive(True)
