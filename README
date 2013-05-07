@@ -1,4 +1,4 @@
-Gedit Macropy v1.0.0 - Feb. 13, 2012
+Gedit Macropy v1.1.0 - May. 07, 2013
 ====================================
 
 This is a plugin for Gedit 3 (http://www.gedit.org), the official text editor 
@@ -9,12 +9,15 @@ This plugin allows to record and execute macros with Gedit 3. It adds menu
 options and buttons to the menu-bar for rapid access. It only allows one macro
 at a time. To execute a macro the shortcut ctrl+alt+m is available.
 
+Changes from previous version (all adam-yorba contributions):
+- Now compatible with python 3 for Gedit 3.8.
+- New makefile to ease the installation.
+
 Installation
 ------------
 
 1. Download the source code from this repository.
-2. Copy the files macropy.py and macropy.plugin to the Gedit plugins 
-directory '~/.local/share/gedit/plugins/' (you might need to create the 
-directory).
-3. Restart Gedit and enable the plugin by searching it in the plugin tab in the
-preferences window.
+2. Unzip the file and cd into the folder with a console.
+3. Run the command "make install" and you're done. The default location 
+  folder is ~/.local/share/gedit/plugins, but can be changed by editing the makefile.
+4. To uninstall the plugin just run the command "make uninstall" in the unzipped folder.
