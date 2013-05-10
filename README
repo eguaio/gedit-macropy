@@ -17,7 +17,9 @@ Installation
 ------------
 
 1. Download the source code from this repository.
-2. Unzip the file and cd into the folder with a console.
+2. Unzip the file and cd into the folder with a console. If you have a gedit version 
+previous to 3.8, change the line _Loader=python3_ of the _macropy.plugin_ 
+file to _Loader=python_ (that is, to erase the 3).
 3. Run the command "make install" and you're done. The default location 
   folder is ~/.local/share/gedit/plugins, but can be changed by editing the makefile.
 4. To uninstall the plugin just run the command "make uninstall" in the unzipped folder.
