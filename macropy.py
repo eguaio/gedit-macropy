@@ -1,11 +1,12 @@
-#!/usr/bin/python
-# -*- coding: utf-8 -*-
+#!/usr/bin/env python
+# -*- coding: utf8 -*-
 
 '''
-  macropy.py 1.0.0
+  macropy.py 2.0.0
   
   Inspired on first implementation in C for gedit 2 by Sam K. Raju.
   This version for Gedit 3, by Eduardo Romero <eguaio@gmail.com>, Feb 13, 2012.
+  Updated for Gedit 3.18, by Leif Martensson <liffem@gmail.com>, Apr 04, 2017.
  
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,101 +21,86 @@
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
- '''
+'''
 
-from gi.repository import GObject, Gtk, Gedit
+from gi.repository import GObject, Gedit, Gio, GLib
 
-UI_XML = """<ui>
-  <menubar name='MenuBar'>
-    <menu name='ToolsMenu' action='Tools'>
-      <placeholder name='ToolsOps_3'>
-        <menu name='Macro' action='MacroPluginOptions'>
-          <menuitem action='StartMacroRecording' 
-                    name='Start Macro Recording'/>
-          <menuitem action='StopMacroRecording' 
-                    name= 'Stop Macro Recording'/>
-          <menuitem action='PlaybackMacro' 
-                    name= 'Playback Macro'/>
-        </menu>
-      </placeholder>
-    </menu>
-  </menubar>
-  <toolbar name='ToolBar'>
-    <separator/>
-    <toolitem action='StartMacroRecording'/>
-    <toolitem action='StopMacroRecording'/>
-    <toolitem action='PlaybackMacro'/>
-    <separator/>
-  </toolbar>
-</ui>"""
+MACRO_SHORTCUT_PLAY = "F4"
+MACRO_PLAY_ACCELERATOR = ["<Ctrl><Alt>m", MACRO_SHORTCUT_PLAY]
 
-class macropy(GObject.Object, Gedit.WindowActivatable):
-    __gtype_name__ = 'Macro'
-    window = GObject.property(type=Gedit.Window)
-   
+class macropy(GObject.Object, Gedit.AppActivatable):
+    __gtype_name__ = "Macro"
+    app = GObject.Property(type=Gedit.App)
+
     def __init__(self):
         GObject.Object.__init__(self)
-        self.macro = []
-    
-    def _add_ui(self):
-        manager = self.window.get_ui_manager()
-        self._actions = Gtk.ActionGroup('macro_actions')        
-        self._actions.add_actions([ 
-            ('MacroPluginOptions', Gtk.STOCK_INFO, 'Macro',None, 
-            'Record and playback any key secquence', None),
-            ('StartMacroRecording', Gtk.STOCK_MEDIA_RECORD, 
-                'Start Recording Macro', 
-                None, 'Start macro recording', 
-                self.on_start_macro_recording),
-            ('StopMacroRecording', Gtk.STOCK_MEDIA_STOP, 
-                'Stop Recording Macro', 
-                None, 'Stop macro recording', 
-                self.on_stop_macro_recording),
-            ('PlaybackMacro', Gtk.STOCK_MEDIA_PLAY, 'Playback Macro', 
-                '<Ctrl><Alt>m', 'Playback recorded macro', 
-                self.on_playback_macro)
-        ])
-        manager.insert_action_group(self._actions)
-        self._ui_merge_id = manager.add_ui_from_string(UI_XML)
-        manager.ensure_update()
-        
+
     def do_activate(self):
-        self._add_ui()   
-        self._actions.get_action('StartMacroRecording').set_sensitive(True)         
-        self._actions.get_action('StopMacroRecording').set_sensitive(False)            
-        self._actions.get_action('PlaybackMacro').set_sensitive(False)  
+        self.menu_ext = self.extend_menu("tools-section")
+        # Menu item Play macro
+        item = Gio.MenuItem.new("Playback recorded macro", "win.macro_play")
+        item.set_attribute_value("accel", GLib.Variant("s", MACRO_SHORTCUT_PLAY))
+        self.menu_ext.prepend_menu_item(item)
+        self.app.set_accels_for_action("win.macro_play", MACRO_PLAY_ACCELERATOR)
+        # Menu item Stop record macro
+        item = Gio.MenuItem.new("Stop macro recording", "win.macro_record_stop")
+        self.menu_ext.prepend_menu_item(item)
+        # Menu item Start record macro
+        item = Gio.MenuItem.new("Start macro recording", "win.macro_record_start")
+        self.menu_ext.prepend_menu_item(item)
 
     def do_deactivate(self):
-        self._remove_ui()
-  
-    def on_start_macro_recording(self, action, data=None):
+        self.app.set_accels_for_action("win.macro_record_start", [])
+        self.app.set_accels_for_action("win.macro_record_stop", [])
+        self.app.set_accels_for_action("win.macro_play", [])
+        self.menu_ext = None
+
+class MacroPyWin(GObject.Object, Gedit.WindowActivatable):
+    window = GObject.property(type=Gedit.Window)
+    macro_play = Gio.SimpleAction(name="macro_play")
+    macro_record_stop = Gio.SimpleAction(name="macro_record_stop")
+    macro_record_start = Gio.SimpleAction(name="macro_record_start")
+
+    def __init__(self):
+        GObject.Object.__init__(self)
+        self.settings = Gio.Settings.new("org.gnome.gedit.preferences.editor")
+
+    def do_activate(self):
+        self.macro_record_start.connect('activate', self.on_start_macro_recording)
+        self.macro_record_stop.connect('activate', self.on_stop_macro_recording)
+        self.macro_play.connect('activate', self.on_playback_macro)
+        # Enable menu item Start record macro
+        self.window.add_action(self.macro_record_start)
+
+    def on_start_macro_recording(self, action, parameter):
         handlers = []
-        handler_id = self.window.connect('key-press-event', 
+        handler_id = self.window.connect('key-press-event',
                                           self.on_key_press_event)
         handlers.append(handler_id)
         self.window.handlers = handlers
         self.macro = []
-        self._actions.get_action('StartMacroRecording').set_sensitive(False)
-        self._actions.get_action('StopMacroRecording').set_sensitive(True) 
-        self._actions.get_action('PlaybackMacro').set_sensitive(False)
+        # Disable menu item Play macro
+        self.window.remove_action("macro_play")
+        # Disable menu item Start record macro
+        self.window.remove_action("macro_record_start")
+        # Enable menu item Stop record macro
+        self.window.add_action(self.macro_record_stop)
 
-    def on_stop_macro_recording(self, action, data=None):
+    def on_stop_macro_recording(self, action, parameter):
         handlers = self.window.handlers
         for handler_id in handlers:
             self.window.disconnect(handler_id)
-        self._actions.get_action('StartMacroRecording').set_sensitive(True)
-        self._actions.get_action('StopMacroRecording').set_sensitive(False) 
-        self._actions.get_action('PlaybackMacro').set_sensitive(True) 
+        # Disable menu item Stop record macro
+        self.window.remove_action("macro_record_stop")
+        # Enable menu item Play macro
+        self.window.add_action(self.macro_play)
+        # Enable menu item Start record macro
+        self.window.add_action(self.macro_record_start)
 
-    def on_playback_macro(self, action, data=None):    
+    def on_playback_macro(self, action, data=None):
         for e in self.macro:
-            e.put()     
-    
+            e.put()
+
     def on_key_press_event(self, window, event):
         self.macro.append(event.copy())
-            
-    def _remove_ui(self):
-        manager = self.window.get_ui_manager()
-        manager.remove_ui(self._ui_merge_id)
-        manager.remove_action_group(self._actions)
-        manager.ensure_update()
+
